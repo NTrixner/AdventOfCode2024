@@ -28,14 +28,11 @@ public class Door4 {
             char ru = matrix[y - 1][x + 1];
             char lb = matrix[y + 1][x - 1];
             char rb = matrix[y + 1][x + 1];
-            if (lu == 'M' && rb == 'S') {
-                count += checkCounterDiag(ru, lb);
-            } else if (lu == 'S' && rb == 'M') {
+            if (lu == 'M' && rb == 'S' || lu == 'S' && rb == 'M') {
                 count += checkCounterDiag(ru, lb);
             }
         }
         System.out.println(count);
-
     }
 
     private static int checkCounterDiag(char ru, char lb) {
