@@ -111,13 +111,8 @@ public class Door5 {
         return isValid;
     }
 
-    private record isValid(boolean isValid, List<Integer> numbers) {
-    }
-
     private static Pair<Integer, Integer> readRule(String line) {
         String[] split = line.split("\\|");
         return Pair.of(Integer.parseInt(split[0]), Integer.parseInt(split[1]));
     }
-
-
 }
