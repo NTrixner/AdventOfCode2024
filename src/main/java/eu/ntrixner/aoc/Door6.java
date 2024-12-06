@@ -14,6 +14,47 @@ public class Door6 {
     public static final List<Character> dirChar = List.of('^', '>', 'v', '<');
     public static final List<Point> dirs = List.of(new Point(0, -1), new Point(+1, 0), new Point(0, +1), new Point(-1, 0));
 
+    public static class Guard {
+        char[][] map;
+        public int x, y, height, width, dir;
+        public boolean outside;
+
+        public List<Pair<Integer, Point>> history;
+        public Guard(char[][] map, int x, int y, int dir){
+            this.map = Utils.deepCopy(map);
+            this.height = map.length;
+            this.width = map[0].length;
+            this.x = x;
+            this.y = y;
+            this.dir = dir;
+            this.outside = false;
+            this.history = new ArrayList<>();
+            history.add(Pair.of(dir, new Point(x, y)));
+        }
+
+        public void step()
+        {
+            int newX = x + dirs.get(dir).x;
+            int newY = y + dirs.get(dir).y;
+            if(newX < 0 || newX >= width || newY < 0 || newY >= height) {
+                outside = true;
+                return;
+            }
+            while(map[newY][newX] == '#'){
+                dir = (dir + 1) % 4;
+                newX = x + dirs.get(dir).x;
+                newY = y + dirs.get(dir).y;
+            }
+            x = newX;
+            y = newY;
+            history.add(Pair.of(dir, new Point(x, y)));
+        }
+
+        public boolean hasLooped() {
+            return history.size() > 1 && history.subList(1, history.size() - 1).contains(Pair.of(dir, new Point(x, y)));
+        }
+    }
+
     public static void main(String[] args) throws IOException {
         long ms = System.currentTimeMillis();
         char[][] map = Utils.readCharsFromFile("src/main/resources/Input6.txt");
@@ -35,118 +76,33 @@ public class Door6 {
         System.out.println("Preparation took " + (System.currentTimeMillis() - ms) + "ms");
         ms = System.currentTimeMillis();
 
-        List<Point> walkedThrough = getWalkedThrough(cx, cy, height, width, dirI, map);
-        walkedThrough = walkedThrough.subList(1, walkedThrough.size());
+        Guard g = new Guard(map, cx, cy, dirI);
+        g.step();
+        long obstacleCount = 0;
+        while(!g.outside) {
+            int oldX = g.x;
+            int oldY = g.y;
+            int oldDir = g.dir;
 
-        Set<Point> walkedThroughSet = Set.copyOf(walkedThrough);
+            g.step();
 
-        final int fcx = cx;
-        final int fcy = cy;
-        final int fDirI = dirI;
+            if(wouldLoop(map, g.x, g.y, oldX, oldY, oldDir))
+                obstacleCount++;
+        }
 
-        System.out.println("WalkedThrough took " + (System.currentTimeMillis() - ms) + "ms");
-        ms = System.currentTimeMillis();
-        Set<Point> obstacles = walkedThroughSet.parallelStream().filter(p -> {
-                    char[][] withObstacle = Utils.deepCopy(map);
-                    withObstacle[p.y][p.x] = 'O';
-                    return checkLoop(withObstacle, fcx, fcy, height, width, fDirI);
-                })
-                .collect(Collectors.toSet());
-
-        System.out.println(obstacles.size());
+        System.out.println("Obstacles: " + obstacleCount);
+        System.out.println("Steps: " + (g.history.stream().map(Pair::getRight).collect(Collectors.toSet()).size()));
         System.out.println("Checks took " + (System.currentTimeMillis() - ms) + "ms");
     }
 
-
-    private static boolean checkLoop(char[][] map, int cx, int cy, int height, int width, int dirI) {
-        List<Pair<Integer, Point>> visited = new ArrayList<>();
-        while (!notOnMap(cx, cy, height, width)) {
-            int newy = cy + dirs.get(dirI).y;
-            int newx = cx + dirs.get(dirI).x;
-            if (notOnMap(newx, newy, height, width)) {
-                break;
-            }
-            if (visited.contains(Pair.of(dirI, new Point(cx, cy))))
+    public static boolean wouldLoop(char[][] map, int obstacleX, int obstacleY, int startX, int startY, int startDir) {
+        Guard g = new Guard(map, startX, startY, startDir);
+        g.map[obstacleY][obstacleX] = '#';
+        while(!g.outside) {
+            g.step();
+            if(g.hasLooped())
                 return true;
-            visited.add(Pair.of(dirI, new Point(cx, cy)));
-
-            if (map[newy][newx] == '#' || map[newy][newx] == 'O') {
-                dirI = (dirI + 1) % 4;
-                newy = cy + dirs.get(dirI).y;
-                newx = cx + dirs.get(dirI).x;
-            }
-            cy = newy;
-            cx = newx;
         }
         return false;
-    }
-
-    private static List<Point> getWalkedThrough(int cx, int cy, int height, int width, int dirI, char[][] map) {
-        List<Point> walkedThrough = new ArrayList<>();
-
-        while (!notOnMap(cx, cy, height, width)) {
-            walkedThrough.add(new Point(cx, cy));
-            int newy = cy + dirs.get(dirI).y;
-            int newx = cx + dirs.get(dirI).x;
-            if (notOnMap(newx, newy, height, width)) {
-                break;
-            }
-            if (map[newy][newx] == '#') {
-                dirI = (dirI + 1) % 4;
-                newy = cy + dirs.get(dirI).y;
-                newx = cx + dirs.get(dirI).x;
-            }
-            cy = newy;
-            cx = newx;
-        }
-        return walkedThrough;
-    }
-
-    private static boolean notOnMap(int cx, int cy, int height, int width) {
-        return (cy < 0 || cy >= height) || (cx < 0 || cx >= width);
-    }
-
-    public static void main1(String[] args) throws IOException {
-        char[][] map = Utils.readCharsFromFile("src/main/resources/Input6.txt");
-        int height = map.length;
-        int width = map[0].length;
-        int cx = 0;
-        int cy = 0;
-        int dirI = 0;
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                if (dirChar.contains(map[y][x])) {
-                    dirI = dirChar.indexOf(map[y][x]);
-                    cx = x;
-                    cy = y;
-                }
-            }
-        }
-
-        while (!notOnMap(cx, cy, height, width)) {
-            map[cy][cx] = 'X';
-            int newy = cy + dirs.get(dirI).y;
-            int newx = cx + dirs.get(dirI).x;
-            if (notOnMap(newx, newy, height, width)) {
-                break;
-            }
-            if (map[newy][newx] == '#') {
-                dirI = (dirI + 1) % 4;
-                newy = cy + dirs.get(dirI).y;
-                newx = cx + dirs.get(dirI).x;
-            }
-            cy = newy;
-            cx = newx;
-        }
-
-        int count = 0;
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                if (map[y][x] == 'X') {
-                    count++;
-                }
-            }
-        }
-        System.out.println(count);
     }
 }
