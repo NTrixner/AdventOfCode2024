@@ -18,8 +18,8 @@ public class Door6 {
         char[][] map;
         public int x, y, height, width, dir;
         public boolean outside;
-
         public List<Pair<Integer, Point>> history;
+
         public Guard(char[][] map, int x, int y, int dir){
             this.map = Utils.deepCopy(map);
             this.height = map.length;
@@ -77,7 +77,6 @@ public class Door6 {
         ms = System.currentTimeMillis();
 
         Guard g = new Guard(map, cx, cy, dirI);
-        g.step();
         long obstacleCount = 0;
         while(!g.outside) {
             int oldX = g.x;
@@ -91,7 +90,7 @@ public class Door6 {
         }
 
         System.out.println("Obstacles: " + obstacleCount);
-        System.out.println("Steps: " + (g.history.stream().map(Pair::getRight).collect(Collectors.toSet()).size()));
+        System.out.println("CoveredTiles: " + (g.history.stream().map(Pair::getRight).collect(Collectors.toSet()).size()));
         System.out.println("Checks took " + (System.currentTimeMillis() - ms) + "ms");
     }
 
