@@ -20,4 +20,8 @@ public final class Utils {
         }
         return matrix;
     }
+
+    public static  char[][] deepCopy(char[][] matrix) {
+        return java.util.Arrays.stream(matrix).map(char[]::clone).toArray($ -> matrix.clone());
+    }
 }
