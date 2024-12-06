@@ -5,6 +5,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -77,7 +78,7 @@ public class Door6 {
         ms = System.currentTimeMillis();
 
         Guard g = new Guard(map, cx, cy, dirI);
-        long obstacleCount = 0;
+        Set<Point> obstacles = new HashSet<>();
         while(!g.outside) {
             int oldX = g.x;
             int oldY = g.y;
@@ -86,10 +87,10 @@ public class Door6 {
             g.step();
 
             if(wouldLoop(map, g.x, g.y, oldX, oldY, oldDir))
-                obstacleCount++;
+                obstacles.add(new Point(g.x, g.y));
         }
 
-        System.out.println("Obstacles: " + obstacleCount);
+        System.out.println("Obstacles: " + obstacles.size());
         System.out.println("CoveredTiles: " + (g.history.stream().map(Pair::getRight).collect(Collectors.toSet()).size()));
         System.out.println("Checks took " + (System.currentTimeMillis() - ms) + "ms");
     }
