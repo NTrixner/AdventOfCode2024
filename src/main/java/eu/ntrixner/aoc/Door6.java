@@ -1,13 +1,11 @@
 package eu.ntrixner.aoc;
 
-import org.apache.commons.lang3.tuple.Pair;
+import eu.ntrixner.aoc.utils.Utils;
 
 import java.awt.*;
-import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Door6 {
 

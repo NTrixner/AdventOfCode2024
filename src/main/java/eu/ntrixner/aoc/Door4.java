@@ -1,5 +1,7 @@
 package eu.ntrixner.aoc;
 
+import eu.ntrixner.aoc.utils.Utils;
+
 import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
